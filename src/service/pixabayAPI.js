@@ -11,7 +11,7 @@ const axiosInstance = axios.create({
   },
 });
 
-export const getSarchedImages = async (query, page) => {
+export const getSearchedImages = async (query, page) => {
   const response = await axiosInstance.get('/', {
     params: {
       q: query,

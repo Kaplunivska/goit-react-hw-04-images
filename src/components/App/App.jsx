@@ -1,23 +1,26 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { useState } from 'react';
 import ImageGallery from 'components/ImageGallery';
 import Searchbar from 'components/Searchbar';
-import { Component } from 'react';
 import css from './App.module.css';
 
-export default class App extends Component {
-  state = {
-    searchQuery: '',
+const queryClient = new QueryClient();
+
+export default function App() {
+  const [searchQuery, setSearchQuery] = useState('');
+    
+  const searchHandler = value => {
+    setSearchQuery(value);
   };
 
-  searchHandler = value => {
-    this.setState({ searchQuery: value });
-  };
-
-  render() {
     return (
+      <QueryClientProvider client={queryClient}>
       <div className={css.app}>
-        <Searchbar onSubmit={this.searchHandler} />
-        <ImageGallery searchQuery={this.state.searchQuery} />
+        <Searchbar onSubmit={searchHandler} />
+        <ImageGallery searchQuery={searchQuery} />
       </div>
+      <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
+    </QueryClientProvider>
     );
-  }
 }

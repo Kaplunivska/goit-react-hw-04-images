@@ -1,7 +1,7 @@
+import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Loader from 'components/Loader';
 import Message from 'components/Message';
-import { Component } from 'react';
-import { createPortal } from 'react-dom';
 import css from './Modal.module.css';
 import { ModalPropTypes } from './Modal.types';
 
@@ -13,73 +13,56 @@ const Status = {
   REJECTED: 'rejected',
 };
 
-export default class Modal extends Component {
-  state = {
-    status: Status.IDLE,
-    error: null,
-  };
+export default function Modal({ url, alt, onClose }) {
+ const [status, setStatus] = useState(Status.PENDING);
+ const [error, setError] = useState(null);
+ const close = useCallback(() => {
+   onClose();
+  }, [onClose]);
 
-  componentDidMount() {
-    this.addListeners();
-    this.setState({ status: Status.PENDING });
-  }
+  useEffect(() => {
+  
+    const keyDownHandler = evt => {
+     if (evt.key === 'Escape') close();
+    };
 
-  componentWillUnmount() {
-    this.removeListeners();
-  }
+   window.addEventListener('keydown', keyDownHandler);
 
-  addListeners = () => {
-    window.addEventListener('keydown', this.keyDownHandler);
-  };
+   return () => {
+     window.removeEventListener('keydown', keyDownHandler);
+   };
+  }, [close]);
 
-  removeListeners = () => {
-    window.removeEventListener('keydown', this.keyDownHandler);
-  };
 
-  keyDownHandler = evt => {
-    if (evt.key !== 'Escape') return;
-
-    this.close();
-  };
-
-  clickBackdropHandler = evt => {
+  const clickBackdropHandler = evt => {
     if (evt.target !== evt.currentTarget) return;
-    this.close();
+    close();
   };
 
-  loadSuccessHandler = () => {
-    this.setState({ status: Status.RESOLVED });
-  };
-  loadeFailedHandler = () => {
-    this.setState({ status: Status.REJECTED, error: 'Image not loaded.' });
+  const loadSuccessHandler = () => {
+    setStatus(Status.RESOLVED);
   };
 
-  close = () => {
-    this.props.onClose();
+  const loadeFailedHandler = () => {
+    setStatus(Status.REJECTED);
+    setError('Image not loaded.');
   };
-
-  render() {
-    const { url, alt } = this.props;
-    const { status, error } = this.state;
 
     return createPortal(
-      <div className={css.overlay} onClick={this.clickBackdropHandler}>
+      <div className={css.overlay} onClick={clickBackdropHandler}>
         <div className={css.modal}>
           {status === Status.PENDING && <Loader />}
-          {status === Status.REJECTED && (
-            <Message title={error} color="white" />
-          )}
+          {status === Status.REJECTED && <Message title={error} color="white" />}
           <img
             src={url}
             alt={alt}
-            onLoad={this.loadSuccessHandler}
-            onError={this.loadeFailedHandler}
+            onLoad={loadSuccessHandler}
+            onError={loadeFailedHandler}
           />
         </div>
       </div>,
       modalRoot
     );
   }
-}
 
 Modal.propTypes = ModalPropTypes;
